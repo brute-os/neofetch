@@ -1,0 +1,48 @@
+name: Brute OS neofetch PKG BUILD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up build environment
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+             git \
+             build-essential \
+             devscripts \
+             debhelper \
+             cmake \
+             debhelper-compat \
+             extra-cmake-modules
+
+    - name: Create Directory and pull source repository
+      run: |
+         mkdir -p /tmp/pkg_build/pkg/
+         cd /tmp/pkg_build/
+         git clone https://github.com/sys41x4/pkg_build_scripts.git
+         git clone https://gitlab.com/brute-os/packages/neofetch.git
+         cd neofetch
+         git checkout main
+    # Copy your files into the neofetch directory
+
+    - name: Generate Debian package
+      run: |
+        cd /tmp/pkg_build/
+        /tmp/pkg_build/pkg_build_scripts/deb/create_unsigned_debian_pkg.sh neofetch@all "Arijit Bhowmick" root
+        mv /tmp/pkg_build/BUILD_neofetch/ /tmp/pkg_build/pkg/
+
+    - name: Upload package artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: neofetch_UNSIGNED
+        path: /tmp/pkg_build/pkg/
